@@ -9,16 +9,16 @@ interface HangmanFigureProps {
 
 const HangmanFigure: React.FC<HangmanFigureProps> = ({ incorrectGuessesCount }) => {
   // Define colors from the theme for different parts
-  const gallowsColor = "hsl(var(--muted))"; // A more subdued color for the gallows
+  const gallowsColor = "hsl(var(--muted))"; 
   const ropeColor = "hsl(var(--muted-foreground))"; 
-  const figureHeadStrokeColor = "hsl(var(--accent))"; // Accent color for the head outline
-  const figureBodyColor = "hsl(var(--primary))"; // Primary color for the body and limbs
+  const figureHeadStrokeColor = "#f2cc8f"; // New color for hangman
+  const figureBodyColor = "#f2cc8f"; // New color for hangman
   const headFillColor = "hsl(var(--background))"; // Background color for the head fill
 
   // Define stroke widths
   const strokeWidthGallows = "4";
   const strokeWidthRope = "3";
-  const strokeWidthFigure = "3.5"; // Slightly thicker for the figure
+  const strokeWidthFigure = "3.5"; 
 
   // SVG line properties for a smoother look
   const strokeLinecapRound = "round" as React.SVGAttributes<SVGElement>["strokeLinecap"];
@@ -49,17 +49,11 @@ const HangmanFigure: React.FC<HangmanFigureProps> = ({ incorrectGuessesCount }) 
 
   return (
     <svg viewBox="0 0 100 120" className="w-40 h-48 sm:w-48 sm:h-56 md:w-56 md:h-64 drop-shadow-lg">
-      {/* Always draw gallows structure (first 4 parts: base, pole, beam, rope) */}
-      {/* Note: The rope is part of the gallows visually but drawn before the head. */}
+      {/* Always draw gallows structure */}
       {figureParts.slice(0, 3)} {/* Base, Pole, Beam */}
-      
-      {/* Conditionally draw rope only if there's at least one incorrect guess to "hang" from */}
-      {/* Or, always draw rope as part of gallows setup. Let's always draw it for consistency. */}
       {figureParts[3]} {/* Rope */}
 
-      {/* Draw character parts based on incorrect guesses (Head, Body, Arms, Legs) */}
-      {/* These correspond to incorrectGuessesCount 1 through 6 */}
-      {/* incorrectGuessesCount = 1 draws head, so slice(4, 4+1) = slice(4,5) */}
+      {/* Draw character parts based on incorrect guesses */}
       {figureParts.slice(4, 4 + incorrectGuessesCount)}
     </svg>
   );
