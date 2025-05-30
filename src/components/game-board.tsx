@@ -18,9 +18,6 @@ const GameBoard: React.FC<GameBoardProps> = ({ wordToGuess, guessedLetters, inco
     .split('')
     .map((letter) => (guessedLetters.includes(letter) || letter === ' ' ? letter : '_'));
 
-  const uniqueLettersInWord = Array.from(new Set(wordToGuess.replace(/ /g, '').split(''))).length;
-  const uniqueCorrectLettersGuessed = guessedLetters.filter(letter => wordToGuess.includes(letter) && letter !== ' ').length;
-
   return (
     <div className={cn("flex flex-col items-center p-4 md:p-6 rounded-lg shadow-lg bg-card/50 w-full max-w-md", animateCorrectGuess && "correct-guess-pulse")}>
       <HangmanFigure incorrectGuessesCount={incorrectGuessCount} />
@@ -41,11 +38,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ wordToGuess, guessedLetters, inco
         ))}
       </div>
 
-      <div className="mt-4 sm:mt-6 w-full flex justify-around text-sm sm:text-base">
-        <div className="text-center">
-          <p className="text-muted-foreground">Correct Letters</p>
-          <p className="font-bold text-primary">{uniqueCorrectLettersGuessed} / {uniqueLettersInWord}</p>
-        </div>
+      <div className="mt-4 sm:mt-6 w-full flex justify-center text-sm sm:text-base">
         <div className="text-center">
           <p className="text-muted-foreground">Incorrect Guesses</p>
           <p className="font-bold text-destructive">{incorrectGuessCount} / {MAX_INCORRECT_GUESSES}</p>
@@ -64,3 +57,4 @@ export default GameBoard;
 // .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
 // This should ideally be in globals.css, but for brevity, it's implied.
 // The current letter-tile styles in globals.css already provide good visual distinction.
+
