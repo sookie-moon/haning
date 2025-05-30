@@ -1,3 +1,4 @@
+
 "use client";
 
 import type React from 'react';
@@ -12,20 +13,20 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trophy, Skull } from 'lucide-react';
-import { cn } from "@/lib/utils"; // Added import for cn
+import { cn } from "@/lib/utils";
 
 interface GameStatusDialogProps {
   isOpen: boolean;
   status: 'won' | 'lost';
-  word?: string; // The word that was being guessed, show if lost
-  onPlayAgain: () => void;
-  onClose: () => void; // For controlled component if needed, or can be managed internally
+  word?: string;
+  onConfirm: () => void; // Renamed from onPlayAgain to onConfirm
+  onClose: () => void; 
 }
 
-const GameStatusDialog: React.FC<GameStatusDialogProps> = ({ isOpen, status, word, onPlayAgain, onClose }) => {
+const GameStatusDialog: React.FC<GameStatusDialogProps> = ({ isOpen, status, word, onConfirm, onClose }) => {
   if (!isOpen) return null;
 
-  const title = status === 'won' ? "Congratulations!" : "Game Over!";
+  const title = status === 'won' ? "Congratulations!" : "Too Bad!";
   const description = status === 'won' 
     ? "You've successfully guessed the word!" 
     : `Better luck next time! The word was: ${word}`;
@@ -33,7 +34,7 @@ const GameStatusDialog: React.FC<GameStatusDialogProps> = ({ isOpen, status, wor
   const Icon = status === 'won' ? Trophy : Skull;
 
   return (
-    <AlertDialog open={isOpen} onOpenChange={onClose}>
+    <AlertDialog open={isOpen} onOpenChange={onClose}> {/* onClose handles X or overlay click */}
       <AlertDialogContent className="max-w-sm">
         <AlertDialogHeader className="items-center">
           <Icon className={cn("h-16 w-16 mb-4", status === 'won' ? 'text-primary' : 'text-destructive')} />
@@ -43,8 +44,9 @@ const GameStatusDialog: React.FC<GameStatusDialogProps> = ({ isOpen, status, wor
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter className="mt-4">
-          <Button onClick={onPlayAgain} className="w-full" variant={status === 'won' ? 'default' : 'destructive'}>
-            Play Again
+          {/* This button now calls onConfirm */}
+          <Button onClick={onConfirm} className="w-full" variant={status === 'won' ? 'default' : 'destructive'}>
+            Continue
           </Button>
         </AlertDialogFooter>
       </AlertDialogContent>

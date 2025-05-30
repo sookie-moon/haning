@@ -1,3 +1,4 @@
+
 "use client";
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -5,71 +6,116 @@ import CategorySelector from '@/components/category-selector';
 import GameBoard from '@/components/game-board';
 import Keyboard from '@/components/keyboard';
 import GameStatusDialog from '@/components/game-status-dialog';
+import OverallResultDialog from '@/components/overall-result-dialog'; // New import
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES, MAX_INCORRECT_GUESSES, type GameCategory } from '@/config/game-config';
 import { generateHint, type GenerateHintInput } from '@/ai/flows/generate-hint';
 import { Lightbulb, RefreshCw } from 'lucide-react';
 import { useToast } from "@/hooks/use-toast";
-import { cn } from '@/lib/utils';
 
-type GameStatus = 'category-select' | 'playing' | 'won' | 'lost' | 'hinting';
+const TOTAL_QUESTIONS_PER_GAME = 10;
+
+type OverallGameStatus = 'category-select' | 'playing-word' | 'word-result' | 'game-over';
+type WordOutcome = 'won' | 'lost' | null;
+
+// Helper function to shuffle an array
+const shuffleArray = <T>(array: T[]): T[] => {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+};
 
 export default function HangmanPage() {
   const [selectedCategory, setSelectedCategory] = useState<GameCategory | null>(null);
+  const [gameWords, setGameWords] = useState<string[]>([]);
   const [currentWord, setCurrentWord] = useState<string>('');
+  const [currentQuestionIndex, setCurrentQuestionIndex] = useState<number>(0);
   const [guessedLetters, setGuessedLetters] = useState<string[]>([]);
   const [incorrectGuesses, setIncorrectGuesses] = useState<string[]>([]);
-  const [gameStatus, setGameStatus] = useState<GameStatus>('category-select');
+  const [score, setScore] = useState<number>(0);
+  
+  const [overallGameStatus, setOverallGameStatus] = useState<OverallGameStatus>('category-select');
+  const [currentWordOutcome, setCurrentWordOutcome] = useState<WordOutcome>(null);
+  
   const [hint, setHint] = useState<string | null>(null);
   const [isLoadingHint, setIsLoadingHint] = useState(false);
   const [animateCorrectGuess, setAnimateCorrectGuess] = useState(false);
 
   const { toast } = useToast();
 
-  const pickRandomWord = useCallback((category: GameCategory): string => {
-    const randomIndex = Math.floor(Math.random() * category.words.length);
-    return category.words[randomIndex].toUpperCase();
+  const loadWord = useCallback((word: string) => {
+    setCurrentWord(word.toUpperCase());
+    setGuessedLetters([]);
+    setIncorrectGuesses([]);
+    setHint(null);
+    setCurrentWordOutcome(null);
+    // Ensure animation reset for next word
+    setAnimateCorrectGuess(false); 
   }, []);
 
   const startGame = useCallback((category: GameCategory) => {
     setSelectedCategory(category);
-    const newWord = pickRandomWord(category);
-    setCurrentWord(newWord);
+    const allWords = shuffleArray(category.words);
+    const wordsForGame = allWords.slice(0, TOTAL_QUESTIONS_PER_GAME);
+    setGameWords(wordsForGame);
+    setCurrentQuestionIndex(0);
+    setScore(0);
+    setOverallGameStatus('playing-word');
+    if (wordsForGame.length > 0) {
+      loadWord(wordsForGame[0]);
+    } else {
+      // Handle case where category might have less than 10 words, though config ensures more.
+      toast({ title: "Error", description: "Not enough words in category.", variant: "destructive" });
+      setOverallGameStatus('category-select');
+    }
+  }, [loadWord, toast]);
+
+  const resetToCategorySelect = () => {
+    setOverallGameStatus('category-select');
+    setSelectedCategory(null);
+    setGameWords([]);
+    setCurrentWord('');
+    setCurrentQuestionIndex(0);
     setGuessedLetters([]);
     setIncorrectGuesses([]);
+    setScore(0);
     setHint(null);
-    setGameStatus('playing');
-  }, [pickRandomWord]);
-
-  const resetGame = () => {
-    setGameStatus('category-select');
-    setSelectedCategory(null);
-    setCurrentWord('');
+    setCurrentWordOutcome(null);
+    setIsLoadingHint(false);
   };
 
   useEffect(() => {
-    if (gameStatus === 'playing' && currentWord) {
-      const wordGuessed = currentWord.split('').every(letter => guessedLetters.includes(letter) || letter === ' ');
-      if (wordGuessed) {
-        setGameStatus('won');
-        return;
-      }
-      if (incorrectGuesses.length >= MAX_INCORRECT_GUESSES) {
-        setGameStatus('lost');
-      }
+    if (overallGameStatus !== 'playing-word' || !currentWord) {
+      return;
     }
-  }, [guessedLetters, incorrectGuesses, currentWord, gameStatus]);
+
+    const wordGuessed = currentWord.split('').every(letter => guessedLetters.includes(letter) || letter === ' ');
+    if (wordGuessed) {
+      setScore(s => s + 1);
+      setCurrentWordOutcome('won');
+      setOverallGameStatus('word-result');
+      return;
+    }
+
+    if (incorrectGuesses.length >= MAX_INCORRECT_GUESSES) {
+      setCurrentWordOutcome('lost');
+      setOverallGameStatus('word-result');
+    }
+  }, [guessedLetters, incorrectGuesses, currentWord, overallGameStatus, loadWord]);
   
   useEffect(() => {
     if (animateCorrectGuess) {
-      const timer = setTimeout(() => setAnimateCorrectGuess(false), 700); // Duration of pulse animation
+      const timer = setTimeout(() => setAnimateCorrectGuess(false), 700);
       return () => clearTimeout(timer);
     }
   }, [animateCorrectGuess]);
 
   const handleLetterGuess = (letter: string) => {
-    if (gameStatus !== 'playing' || guessedLetters.includes(letter) || incorrectGuesses.includes(letter)) {
+    if (overallGameStatus !== 'playing-word' || guessedLetters.includes(letter) || incorrectGuesses.includes(letter)) {
       return;
     }
 
@@ -83,10 +129,24 @@ export default function HangmanPage() {
     }
   };
 
+  const handleProceed = () => {
+    const nextIndex = currentQuestionIndex + 1;
+    if (nextIndex < gameWords.length) {
+      setCurrentQuestionIndex(nextIndex);
+      loadWord(gameWords[nextIndex]);
+      setOverallGameStatus('playing-word');
+    } else {
+      setOverallGameStatus('game-over');
+    }
+  };
+
   const handleRequestHint = async () => {
-    if (!currentWord || !selectedCategory) return;
+    if (!currentWord || !selectedCategory || overallGameStatus !== 'playing-word') return;
     setIsLoadingHint(true);
-    setGameStatus('hinting');
+    // Temporarily set status to prevent multiple hint requests or guesses
+    const prevStatus = overallGameStatus; 
+    setOverallGameStatus('playing-word'); // Keep it in playing state technically, just loading hint
+
     try {
       const input: GenerateHintInput = {
         word: currentWord,
@@ -102,11 +162,12 @@ export default function HangmanPage() {
       toast({ title: "Hint Error", description: "Could not fetch a hint.", variant: "destructive" });
     } finally {
       setIsLoadingHint(false);
-      setGameStatus('playing'); // Return to playing state
+      // Restore status if it was changed, or ensure it's 'playing-word'
+      setOverallGameStatus('playing-word'); 
     }
   };
 
-  if (gameStatus === 'category-select') {
+  if (overallGameStatus === 'category-select') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground">
         <h1 className="text-5xl font-extrabold mb-8 tracking-tighter text-center">Hangin' with Jisook</h1>
@@ -115,24 +176,27 @@ export default function HangmanPage() {
     );
   }
 
-  const incorrectGuessCount = incorrectGuesses.length;
   const allGuessedLetters = [...guessedLetters, ...incorrectGuesses];
 
   return (
     <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 space-y-4 bg-background text-foreground">
       <header className="w-full max-w-3xl flex justify-between items-center px-2 sm:px-0">
         <h1 className="text-3xl sm:text-4xl font-bold text-primary tracking-tight">Hangin' with Jisook</h1>
-        <Button variant="outline" size="sm" onClick={resetGame} aria-label="Change Category">
+        <Button variant="outline" size="sm" onClick={resetToCategorySelect} aria-label="Change Category">
           <RefreshCw className="mr-2 h-4 w-4" /> Change Category
         </Button>
       </header>
       
-      <p className="text-lg text-muted-foreground">Category: <span className="font-semibold text-foreground">{selectedCategory?.name}</span></p>
+      <div className="text-lg text-muted-foreground w-full max-w-3xl flex justify-between px-2 sm:px-0">
+        <p>Category: <span className="font-semibold text-foreground">{selectedCategory?.name}</span></p>
+        <p>Question: <span className="font-semibold text-foreground">{currentQuestionIndex + 1} / {gameWords.length || TOTAL_QUESTIONS_PER_GAME}</span></p>
+        <p>Score: <span className="font-semibold text-foreground">{score}</span></p>
+      </div>
 
       <GameBoard
         wordToGuess={currentWord}
         guessedLetters={guessedLetters}
-        incorrectGuessCount={incorrectGuessCount}
+        incorrectGuessCount={incorrectGuesses.length}
         animateCorrectGuess={animateCorrectGuess}
       />
 
@@ -150,10 +214,13 @@ export default function HangmanPage() {
       )}
 
       <div className="flex flex-col items-center space-y-4 w-full max-w-xl">
-        <Keyboard onLetterPress={handleLetterGuess} disabledLetters={allGuessedLetters} />
+        <Keyboard 
+          onLetterPress={handleLetterGuess} 
+          disabledLetters={allGuessedLetters} 
+        />
         <Button
           onClick={handleRequestHint}
-          disabled={isLoadingHint || hint !== null || gameStatus !== 'playing'}
+          disabled={isLoadingHint || hint !== null || overallGameStatus !== 'playing-word'}
           className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
           aria-label="Get an AI hint"
         >
@@ -163,11 +230,19 @@ export default function HangmanPage() {
       </div>
 
       <GameStatusDialog
-        isOpen={gameStatus === 'won' || gameStatus === 'lost'}
-        status={gameStatus === 'won' ? 'won' : 'lost'}
+        isOpen={overallGameStatus === 'word-result'}
+        status={currentWordOutcome || 'lost'} // Provide a default if somehow null
         word={currentWord}
-        onPlayAgain={resetGame}
-        onClose={() => setGameStatus('playing')} // Or reset to category select
+        onConfirm={handleProceed} // Renamed from onPlayAgain
+        onClose={handleProceed} // Close (X or overlay) also proceeds
+      />
+
+      <OverallResultDialog
+        isOpen={overallGameStatus === 'game-over'}
+        score={score}
+        totalQuestions={gameWords.length || TOTAL_QUESTIONS_PER_GAME}
+        onPlayAgain={resetToCategorySelect}
+        onClose={resetToCategorySelect} // Close (X or overlay) also resets to category select
       />
       
       <footer className="text-xs text-muted-foreground pt-8">
