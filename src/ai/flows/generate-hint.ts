@@ -1,3 +1,4 @@
+
 // This file is machine-generated - do not edit!
 
 'use server';
@@ -28,7 +29,7 @@ const GenerateHintOutputSchema = z.object({
 export type GenerateHintOutput = z.infer<typeof GenerateHintOutputSchema>;
 
 export async function generateHint(input: GenerateHintInput): Promise<GenerateHintOutput> {
-   console.log('Generating hint with input:', input);
+  console.log('Generating hint with input:', input);
   return generateHintFlow(input);
 }
 
@@ -58,3 +59,4 @@ const generateHintFlow = ai.defineFlow(
     return output!;
   }
 );
+
