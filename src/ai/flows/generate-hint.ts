@@ -29,8 +29,17 @@ const GenerateHintOutputSchema = z.object({
 export type GenerateHintOutput = z.infer<typeof GenerateHintOutputSchema>;
 
 export async function generateHint(input: GenerateHintInput): Promise<GenerateHintOutput> {
-  console.log('Generating hint with input:', input);
-  return generateHintFlow(input);
+  console.log('[generateHint Flow] Received input:', JSON.stringify(input));
+  try {
+    const result = await generateHintFlow(input);
+    console.log('[generateHint Flow] Successfully generated hint:', JSON.stringify(result));
+    return result;
+  } catch (error) {
+    console.error('[generateHint Flow] Error during execution:', error);
+    // Re-throw the error so Next.js handles it and returns a 500,
+    // but we've logged details server-side.
+    throw error;
+  }
 }
 
 const generateHintPrompt = ai.definePrompt({
@@ -55,8 +64,19 @@ const generateHintFlow = ai.defineFlow(
     outputSchema: GenerateHintOutputSchema,
   },
   async input => {
-    const {output} = await generateHintPrompt(input);
-    return output!;
+    console.log('[generateHintFlow - inner] Starting flow with input:', JSON.stringify(input));
+    try {
+      const {output} = await generateHintPrompt(input);
+      console.log('[generateHintFlow - inner] Prompt executed, output:', JSON.stringify(output));
+      if (!output) {
+        console.error('[generateHintFlow - inner] Prompt returned null/undefined output.');
+        // This will be caught by the outer try/catch and logged.
+        throw new Error('AI prompt returned no output.');
+      }
+      return output!;
+    } catch (error) {
+      console.error('[generateHintFlow - inner] Error calling prompt:', error);
+      throw error; // Re-throw to be caught by the outer try/catch in the exported generateHint function
+    }
   }
 );
-
