@@ -153,6 +153,7 @@ export default function HangmanPage() {
         category: selectedCategory.name,
         incorrectGuesses: incorrectGuesses,
       };
+ console.log("Generating hint with input:", input);
       const result = await generateHint(input);
       setHint(result.hint);
       toast({ title: "Hint Received!", description: "Check below the game board for your hint.", variant: "default" });
