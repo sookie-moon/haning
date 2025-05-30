@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { Trophy, Skull } from 'lucide-react';
+import { cn } from "@/lib/utils"; // Added import for cn
 
 interface GameStatusDialogProps {
   isOpen: boolean;
