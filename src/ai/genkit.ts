@@ -17,11 +17,11 @@ if (process.env.NODE_ENV !== 'production') {
 
 export const ai = genkit({
   plugins: [googleAI()],
-  model: 'googleai/gemini-2.0-flash',
+  // The 'model' parameter is not valid here for Genkit v1.x constructor.
+  // Models are specified in ai.generate() calls or ai.definePrompt().
 });
-
-// console.log('Genkit initialized with model:', ai.registry.model('googleai/gemini-2.0-flash')?.name || 'Unknown model'); // This line was causing the error
 
 if (!process.env.GEMINI_API_KEY && !process.env.GOOGLE_API_KEY) {
   console.warn('WARNING: Neither GEMINI_API_KEY nor GOOGLE_API_KEY is set in the environment. AI calls will likely fail.');
 }
+
