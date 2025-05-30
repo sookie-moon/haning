@@ -42,9 +42,10 @@ export async function generateHint(input: GenerateHintInput): Promise<GenerateHi
   }
 }
 
+console.log('[generateHint Flow] Defining generateHintPrompt...');
 const generateHintPrompt = ai.definePrompt({
   name: 'generateHintPrompt',
-  model: 'googleai/gemini-1.5-flash-latest', // Specify the model here
+  model: 'googleai/gemini-1.5-flash-latest', // Crucial: Specify the model here
   input: {schema: GenerateHintInputSchema},
   output: {schema: GenerateHintOutputSchema},
   prompt: `You are the AI assistant for a Hangman game.
@@ -57,6 +58,13 @@ Provide a single cryptic and thematic hint to help the player guess the word, wi
 
 HINT:`,
 });
+// Check if prompt object is created and name is accessible
+if (generateHintPrompt && generateHintPrompt.name) {
+  console.log('[generateHint Flow] generateHintPrompt defined successfully. Name:', generateHintPrompt.name);
+} else {
+  console.error('[generateHint Flow] FAILED to define generateHintPrompt or name is not accessible.');
+}
+
 
 const generateHintFlow = ai.defineFlow(
   {
@@ -66,6 +74,12 @@ const generateHintFlow = ai.defineFlow(
   },
   async input => {
     console.log('[generateHintFlow - inner] Starting flow with input:', JSON.stringify(input));
+    if (generateHintPrompt && generateHintPrompt.name) {
+      console.log('[generateHintFlow - inner] About to call generateHintPrompt. Prompt name:', generateHintPrompt.name);
+    } else {
+      console.error('[generateHintFlow - inner] generateHintPrompt is not properly defined before calling.');
+      throw new Error('Internal error: generateHintPrompt not defined.');
+    }
     try {
       const {output} = await generateHintPrompt(input);
       console.log('[generateHintFlow - inner] Prompt executed, output from AI:', JSON.stringify(output));
