@@ -19,7 +19,7 @@ const GameBoard: React.FC<GameBoardProps> = ({ wordToGuess, guessedLetters, inco
     .map((letter) => (guessedLetters.includes(letter) || letter === ' ' ? letter : '_'));
 
   return (
-    <div className={cn("flex flex-col items-center p-4 md:p-6 rounded-lg shadow-lg bg-card/50 w-full max-w-md", animateCorrectGuess && "correct-guess-pulse")}>
+    <div className={cn("flex flex-col items-center p-4 md:p-6 rounded-lg shadow-lg bg-card/50 w-fit-content", animateCorrectGuess && "correct-guess-pulse")}>
       <HangmanFigure incorrectGuessesCount={incorrectGuessCount} />
       
       <div className="flex space-x-1 sm:space-x-2 mt-4 sm:mt-6" aria-label="Word to guess">
@@ -57,4 +57,3 @@ export default GameBoard;
 // .animate-fadeIn { animation: fadeIn 0.3s ease-out forwards; }
 // This should ideally be in globals.css, but for brevity, it's implied.
 // The current letter-tile styles in globals.css already provide good visual distinction.
-
