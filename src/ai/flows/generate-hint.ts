@@ -44,13 +44,14 @@ export async function generateHint(input: GenerateHintInput): Promise<GenerateHi
 
 const generateHintPrompt = ai.definePrompt({
   name: 'generateHintPrompt',
+  model: 'googleai/gemini-1.5-flash-latest', // Specify the model here
   input: {schema: GenerateHintInputSchema},
   output: {schema: GenerateHintOutputSchema},
   prompt: `You are the AI assistant for a Hangman game.
 
 The player is trying to guess a word in the category "{{category}}". The word is "{{word}}".
 
-The player has made the following incorrect guesses: {{incorrectGuesses}}.
+The player has made the following incorrect guesses: {{#if incorrectGuesses.length}}{{incorrectGuesses}}{{else}}none{{/if}}.
 
 Provide a single cryptic and thematic hint to help the player guess the word, without giving away the answer directly. The hint should be relevant to the category and word.
 
@@ -68,11 +69,11 @@ const generateHintFlow = ai.defineFlow(
     try {
       const {output} = await generateHintPrompt(input);
       console.log('[generateHintFlow - inner] Prompt executed, output from AI:', JSON.stringify(output));
-      if (!output || !output.hint) { // Check specifically for hint presence
-        console.error('[generateHintFlow - inner] AI prompt returned null, undefined, or incomplete output. Output received:', JSON.stringify(output));
+      if (!output || !output.hint) { 
+        console.error('[generateHintFlow - inner] AI prompt returned null, undefined, or incomplete output (no hint field). Output received:', JSON.stringify(output));
         throw new Error('AI prompt returned no valid hint output. Check Vercel logs for details from the AI service.');
       }
-      return output; // No need for output! if we validated it
+      return output; 
     } catch (error) {
       // This log is critical for debugging on Vercel.
       // It will contain the actual error from Google AI if the API call failed.
