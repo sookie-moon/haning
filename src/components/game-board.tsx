@@ -1,8 +1,10 @@
+
 "use client";
 
 import type React from 'react';
 import HangmanFigure from './hangman-figure';
 import { cn } from '@/lib/utils';
+import { MAX_INCORRECT_GUESSES } from '@/config/game-config';
 
 interface GameBoardProps {
   wordToGuess: string;
@@ -16,9 +18,13 @@ const GameBoard: React.FC<GameBoardProps> = ({ wordToGuess, guessedLetters, inco
     .split('')
     .map((letter) => (guessedLetters.includes(letter) || letter === ' ' ? letter : '_'));
 
+  const uniqueLettersInWord = Array.from(new Set(wordToGuess.replace(/ /g, '').split(''))).length;
+  const uniqueCorrectLettersGuessed = guessedLetters.filter(letter => wordToGuess.includes(letter) && letter !== ' ').length;
+
   return (
-    <div className={cn("flex flex-col items-center p-4 md:p-6 rounded-lg shadow-lg bg-card/50", animateCorrectGuess && "correct-guess-pulse")}>
+    <div className={cn("flex flex-col items-center p-4 md:p-6 rounded-lg shadow-lg bg-card/50 w-full max-w-md", animateCorrectGuess && "correct-guess-pulse")}>
       <HangmanFigure incorrectGuessesCount={incorrectGuessCount} />
+      
       <div className="flex space-x-1 sm:space-x-2 mt-4 sm:mt-6" aria-label="Word to guess">
         {displayedWord.map((char, index) => (
           <span
@@ -33,6 +39,17 @@ const GameBoard: React.FC<GameBoardProps> = ({ wordToGuess, guessedLetters, inco
             {char === ' ' ? '' : char}
           </span>
         ))}
+      </div>
+
+      <div className="mt-4 sm:mt-6 w-full flex justify-around text-sm sm:text-base">
+        <div className="text-center">
+          <p className="text-muted-foreground">Correct Letters</p>
+          <p className="font-bold text-primary">{uniqueCorrectLettersGuessed} / {uniqueLettersInWord}</p>
+        </div>
+        <div className="text-center">
+          <p className="text-muted-foreground">Incorrect Guesses</p>
+          <p className="font-bold text-destructive">{incorrectGuessCount} / {MAX_INCORRECT_GUESSES}</p>
+        </div>
       </div>
     </div>
   );
