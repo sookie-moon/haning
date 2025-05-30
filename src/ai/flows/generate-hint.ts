@@ -28,6 +28,7 @@ const GenerateHintOutputSchema = z.object({
 export type GenerateHintOutput = z.infer<typeof GenerateHintOutputSchema>;
 
 export async function generateHint(input: GenerateHintInput): Promise<GenerateHintOutput> {
+   console.log('Generating hint with input:', input);
   return generateHintFlow(input);
 }
 
