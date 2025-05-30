@@ -35,7 +35,7 @@ export async function generateHint(input: GenerateHintInput): Promise<GenerateHi
     console.log('[generateHint Flow] Successfully generated hint:', JSON.stringify(result));
     return result;
   } catch (error) {
-    console.error('[generateHint Flow] Error during execution:', error);
+    console.error('[generateHint Flow] Error during execution. This is the error passed to the client, check Vercel logs for more details from the AI service:', error);
     // Re-throw the error so Next.js handles it and returns a 500,
     // but we've logged details server-side.
     throw error;
@@ -67,16 +67,18 @@ const generateHintFlow = ai.defineFlow(
     console.log('[generateHintFlow - inner] Starting flow with input:', JSON.stringify(input));
     try {
       const {output} = await generateHintPrompt(input);
-      console.log('[generateHintFlow - inner] Prompt executed, output:', JSON.stringify(output));
-      if (!output) {
-        console.error('[generateHintFlow - inner] Prompt returned null/undefined output.');
-        // This will be caught by the outer try/catch and logged.
-        throw new Error('AI prompt returned no output.');
+      console.log('[generateHintFlow - inner] Prompt executed, output from AI:', JSON.stringify(output));
+      if (!output || !output.hint) { // Check specifically for hint presence
+        console.error('[generateHintFlow - inner] AI prompt returned null, undefined, or incomplete output. Output received:', JSON.stringify(output));
+        throw new Error('AI prompt returned no valid hint output. Check Vercel logs for details from the AI service.');
       }
-      return output!;
+      return output; // No need for output! if we validated it
     } catch (error) {
-      console.error('[generateHintFlow - inner] Error calling prompt:', error);
+      // This log is critical for debugging on Vercel.
+      // It will contain the actual error from Google AI if the API call failed.
+      console.error('[generateHintFlow - inner] Error calling prompt or processing its output. THIS IS LIKELY THE ROOT CAUSE ON VERCEL:', error);
       throw error; // Re-throw to be caught by the outer try/catch in the exported generateHint function
     }
   }
 );
+
