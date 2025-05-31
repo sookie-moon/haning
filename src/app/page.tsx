@@ -6,7 +6,7 @@ import CategorySelector from '@/components/category-selector';
 import GameBoard from '@/components/game-board';
 import Keyboard from '@/components/keyboard';
 import GameStatusDialog from '@/components/game-status-dialog';
-import OverallResultDialog from '@/components/overall-result-dialog'; // New import
+import OverallResultDialog from '@/components/overall-result-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { CATEGORIES, MAX_INCORRECT_GUESSES, type GameCategory } from '@/config/game-config';
@@ -68,7 +68,6 @@ export default function HangmanPage() {
     if (wordsForGame.length > 0) {
       loadWord(wordsForGame[0]);
     } else {
-      // Handle case where category might have less than 10 words, though config ensures more.
       toast({ title: "Error", description: "Not enough words in category.", variant: "destructive" });
       setOverallGameStatus('category-select');
     }
@@ -143,9 +142,8 @@ export default function HangmanPage() {
   const handleRequestHint = async () => {
     if (!currentWord || !selectedCategory || overallGameStatus !== 'playing-word') return;
     setIsLoadingHint(true);
-    // Temporarily set status to prevent multiple hint requests or guesses
     const prevStatus = overallGameStatus; 
-    setOverallGameStatus('playing-word'); // Keep it in playing state technically, just loading hint
+    setOverallGameStatus('playing-word'); 
 
     try {
       const input: GenerateHintInput = {
@@ -153,7 +151,7 @@ export default function HangmanPage() {
         category: selectedCategory.name,
         incorrectGuesses: incorrectGuesses,
       };
- console.log("Generating hint with input:", input);
+      console.log("Generating hint with input:", input);
       const result = await generateHint(input);
       setHint(result.hint);
       toast({ title: "Hint Received!", description: "Check below the game board for your hint.", variant: "default" });
@@ -163,7 +161,6 @@ export default function HangmanPage() {
       toast({ title: "Hint Error", description: "Could not fetch a hint.", variant: "destructive" });
     } finally {
       setIsLoadingHint(false);
-      // Restore status if it was changed, or ensure it's 'playing-word'
       setOverallGameStatus('playing-word'); 
     }
   };
@@ -171,7 +168,7 @@ export default function HangmanPage() {
   if (overallGameStatus === 'category-select') {
     return (
       <main className="flex min-h-screen flex-col items-center justify-center p-4 bg-background text-foreground">
-        <h1 className="text-5xl font-extrabold mb-8 tracking-tighter text-center">Hangin' with Jisook</h1>
+        <h1 className="text-4xl sm:text-5xl font-extrabold mb-8 tracking-tighter text-center">Hangin' with Jisook</h1>
         <CategorySelector categories={CATEGORIES} onSelectCategory={startGame} />
       </main>
     );
@@ -180,17 +177,19 @@ export default function HangmanPage() {
   const allGuessedLetters = [...guessedLetters, ...incorrectGuesses];
 
   return (
-    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 space-y-4 bg-background text-foreground">
+    <main className="flex min-h-screen flex-col items-center justify-center p-2 sm:p-4 space-y-3 sm:space-y-4 bg-background text-foreground">
       <header className="w-full max-w-3xl flex justify-between items-center px-2 sm:px-0">
-        <h1 className="text-3xl sm:text-4xl font-bold text-primary tracking-tight">Hangin' with Jisook</h1>
+        <h1 className="text-2xl sm:text-3xl font-bold text-primary tracking-tight">Hangin' with Jisook</h1>
         <Button variant="outline" size="sm" onClick={resetToCategorySelect} aria-label="Change Category">
-          <RefreshCw className="mr-2 h-4 w-4" /> Change Category
+          <RefreshCw className="mr-1 sm:mr-2 h-3 w-3 sm:h-4 sm:w-4" /> 
+          <span className="hidden xs:inline">Change Category</span>
+          <span className="xs:hidden">Category</span>
         </Button>
       </header>
       
-      <div className="text-lg text-muted-foreground w-full max-w-3xl flex justify-between px-2 sm:px-0">
-        <p>Category: <span className="font-semibold text-foreground">{selectedCategory?.name}</span></p>
-        <p>Question: <span className="font-semibold text-foreground">{currentQuestionIndex + 1} / {gameWords.length || TOTAL_QUESTIONS_PER_GAME}</span></p>
+      <div className="text-xs xxs:text-sm sm:text-base text-muted-foreground w-full max-w-3xl flex flex-col xxs:flex-row xxs:flex-wrap xxs:justify-between items-start xxs:items-center space-y-1 xxs:space-y-0 px-2 sm:px-0">
+        <p className="mb-1 xxs:mb-0">Category: <span className="font-semibold text-foreground">{selectedCategory?.name}</span></p>
+        <p className="mb-1 xxs:mb-0">Question: <span className="font-semibold text-foreground">{currentQuestionIndex + 1} / {gameWords.length || TOTAL_QUESTIONS_PER_GAME}</span></p>
         <p>Score: <span className="font-semibold text-foreground">{score}</span></p>
       </div>
 
@@ -202,19 +201,19 @@ export default function HangmanPage() {
       />
 
       {hint && (
-        <Card className="mt-4 w-full max-w-xl bg-card/70 border-primary/50">
-          <CardHeader className="p-3">
-            <CardTitle className="text-sm font-semibold text-primary flex items-center">
-              <Lightbulb className="h-4 w-4 mr-2" /> AI Hint:
+        <Card className="mt-2 sm:mt-4 w-full max-w-xs sm:max-w-md md:max-w-lg bg-card/70 border-primary/50">
+          <CardHeader className="p-2 sm:p-3">
+            <CardTitle className="text-xs sm:text-sm font-semibold text-primary flex items-center">
+              <Lightbulb className="h-3 w-3 sm:h-4 sm:w-4 mr-1 sm:mr-2" /> AI Hint:
             </CardTitle>
           </CardHeader>
-          <CardContent className="p-3 pt-0">
-            <p className="text-sm text-foreground">{hint}</p>
+          <CardContent className="p-2 sm:p-3 pt-0">
+            <p className="text-xs sm:text-sm text-foreground">{hint}</p>
           </CardContent>
         </Card>
       )}
 
-      <div className="flex flex-col items-center space-y-4 w-full max-w-xl">
+      <div className="flex flex-col items-center space-y-3 sm:space-y-4 w-full max-w-xs sm:max-w-md md:max-w-xl">
         <Keyboard 
           onLetterPress={handleLetterGuess} 
           disabledLetters={allGuessedLetters} 
@@ -222,20 +221,20 @@ export default function HangmanPage() {
         <Button
           onClick={handleRequestHint}
           disabled={isLoadingHint || hint !== null || overallGameStatus !== 'playing-word'}
-          className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground"
+          className="w-full sm:w-auto bg-accent hover:bg-accent/90 text-accent-foreground py-2 px-3 sm:py-2 sm:px-4 text-sm sm:text-base"
           aria-label="Get an AI hint"
         >
-          <Lightbulb className="mr-2 h-5 w-5" />
+          <Lightbulb className="mr-1 sm:mr-2 h-4 w-4 sm:h-5 sm:w-5" />
           {isLoadingHint ? 'Getting Hint...' : (hint ? 'Hint Received' : 'Get AI Hint')}
         </Button>
       </div>
 
       <GameStatusDialog
         isOpen={overallGameStatus === 'word-result'}
-        status={currentWordOutcome || 'lost'} // Provide a default if somehow null
+        status={currentWordOutcome || 'lost'} 
         word={currentWord}
-        onConfirm={handleProceed} // Renamed from onPlayAgain
-        onClose={handleProceed} // Close (X or overlay) also proceeds
+        onConfirm={handleProceed} 
+        onClose={handleProceed} 
       />
 
       <OverallResultDialog
@@ -243,10 +242,10 @@ export default function HangmanPage() {
         score={score}
         totalQuestions={gameWords.length || TOTAL_QUESTIONS_PER_GAME}
         onPlayAgain={resetToCategorySelect}
-        onClose={resetToCategorySelect} // Close (X or overlay) also resets to category select
+        onClose={resetToCategorySelect} 
       />
       
-      <footer className="text-xs text-muted-foreground pt-8">
+      <footer className="text-xs text-muted-foreground pt-4 sm:pt-8">
         <p>&copy; {new Date().getFullYear()} Hangin' with Jisook. All rights reserved.</p>
       </footer>
     </main>

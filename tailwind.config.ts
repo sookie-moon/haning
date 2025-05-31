@@ -1,3 +1,4 @@
+
 import type { Config } from "tailwindcss";
 
 export default {
@@ -8,6 +9,15 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
+    screens: {
+      'xxs': '360px', // Extra extra small devices (e.g. very small phones)
+      'xs': '480px',  // Extra small devices (e.g. small phones)
+      'sm': '640px',  // Small devices (e.g. phones)
+      'md': '768px',  // Medium devices (e.g. tablets)
+      'lg': '1024px', // Large devices (e.g. laptops)
+      'xl': '1280px', // Extra large devices (e.g. desktops)
+      '2xl': '1536px',// 2X extra large devices (e.g. large desktops)
+    },
   	extend: {
   		colors: {
   			background: 'hsl(var(--background))',

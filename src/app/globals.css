@@ -1,3 +1,4 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -118,7 +119,12 @@
   }
 
   .letter-tile {
-    @apply inline-flex items-center justify-center w-10 h-12 sm:w-12 sm:h-14 md:w-14 md:h-16 border-2 border-foreground text-2xl sm:text-3xl md:text-4xl font-bold uppercase rounded-sm;
+    @apply inline-flex items-center justify-center 
+           w-8 h-10 text-xl /* Base mobile size */
+           sm:w-10 sm:h-12 sm:text-2xl /* Small screens and up */
+           md:w-12 md:h-14 md:text-3xl /* Medium screens and up */
+           lg:w-14 lg:h-16 lg:text-4xl /* Large screens and up */
+           border-2 border-foreground font-bold uppercase rounded-sm;
   }
   .letter-tile-filled {
     @apply border-primary;
